@@ -15,6 +15,8 @@ struct BreakView: View {
     @State private var timerSeconds: Int = 0
     @State private var breakTimer: Timer? = nil // Renamed to avoid conflict with WorkView's timer
 
+    let audio = PomodoroAudio()
+
     // Animation states for internal elements
     @State private var showIcon = false
     @State private var showTitle = false
@@ -51,6 +53,7 @@ struct BreakView: View {
 
 
                 Button("Continue Work") {
+                    audio.play(.upSound)
                     breakTimer?.invalidate() // Stop the break timer
                     breakTimer = nil
                     dismiss() // Dismiss the current view
@@ -97,6 +100,7 @@ struct BreakView: View {
                 if timerMinutes == 0 {
                     breakTimer?.invalidate()
                     breakTimer = nil
+                    audio.play(.upSound)
                     // Timer finished, automatically dismiss
                     dismiss()
                     onDismiss?()
