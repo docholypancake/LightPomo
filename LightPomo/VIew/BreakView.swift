@@ -102,7 +102,7 @@ struct BreakView: View {
         let totalSeconds = timerMinutes * 60 + timerSeconds
         breakEndDate = Date().addingTimeInterval(TimeInterval(totalSeconds))
         
-        breakTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
+        breakTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
             guard let targetDate = breakEndDate else {
                 breakTimer?.invalidate()
                 breakTimer = nil

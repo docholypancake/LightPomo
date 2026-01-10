@@ -144,7 +144,7 @@ struct WorkView: View {
             }
             #endif
 
-            timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
+            timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
                 guard let targetDate = endDate else {
                     timer?.invalidate()
                     timer = nil
@@ -191,11 +191,11 @@ struct WorkView: View {
         )
         
         // If timer is longer than 1 hour, schedule additional intermediate notifications
-        // up to 24 hours to keep the app active in the background
+        // up to 24 hours (iOS limit) for better user awareness
         let maxNotificationTime = min(totalSeconds, 24 * 60 * 60) // Cap at 24 hours
         var notificationTimes: [Double] = []
         
-        // Schedule notifications at intervals to keep app alive
+        // Schedule notifications at intervals for user awareness of long running timers
         if totalSeconds > 3600 { // If more than 1 hour
             var currentTime = 3600.0 // Start at 1 hour
             while currentTime < Double(maxNotificationTime) {
