@@ -1,5 +1,5 @@
 //
-//  ShortBreakView.swift
+//  BreakView.swift
 //  LightPomo
 //
 //  Created by Oleh on 10.01.2026.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ShortBreakView: View {
+struct BreakView: View {
     @Environment(\.dismiss) var dismiss // Use @Environment to dismiss the view
     var onDismiss: (() -> Void)? = nil // Closure to call when dismissing
 
@@ -26,7 +26,7 @@ struct ShortBreakView: View {
             Color.green.ignoresSafeArea() // Background changed to green
 
             VStack {
-                Image(systemName: "cup.and.saucer.fill") // More break-like icon
+                Image(systemName: "cup.and.saucer.fill") 
                     .imageScale(.large)
                     .font(.system(size: 80)) // Larger icon
                     .foregroundStyle(.white)
@@ -115,5 +115,5 @@ struct ShortBreakView: View {
 }
 
 #Preview {
-    ShortBreakView()
+    BreakView()
 }

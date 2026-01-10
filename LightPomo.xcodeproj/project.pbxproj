@@ -32,8 +32,8 @@
 		84FFFBB42F12B76D005820CF = {
 			isa = PBXGroup;
 			children = (
-				84FFFBBF2F12B76D005820CF /* LightPomo */,
 				84FFFBBE2F12B76D005820CF /* Products */,
+				84FFFBBF2F12B76D005820CF /* LightPomo */,
 			);
 			sourceTree = "<group>";
 		};

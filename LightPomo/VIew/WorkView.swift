@@ -14,8 +14,11 @@ struct WorkView: View {
     @State private var isRunning = false
     @State private var timer: Timer? = nil
     
-    // New state variable to store the initial minutes set by the user
+    // State variable to store the initial minutes set by the user
     @State private var initialSetMinutes: Int = 25
+
+    // New state variable to control the presentation of BreakView
+    @State private var showBreakView = false
 
     let audio = PomodoroAudio()
 
@@ -40,10 +43,8 @@ struct WorkView: View {
                     // Custom Minute Picker
                     HStack(spacing: 8) {
                         Button {
-                            if initialSetMinutes > 1 { // Changed from timerMinutes to initialSetMinutes
+                            if initialSetMinutes > 1 {
                                 initialSetMinutes -= 1
-                                // No need to update initialSetMinutes = timerMinutes here,
-                                // as initialSetMinutes is now the source of truth for the picker.
                             }
                         } label: {
                             Image(systemName: "minus.circle.fill")
@@ -61,9 +62,8 @@ struct WorkView: View {
 
 
                         Button {
-                            if initialSetMinutes < 120 { // Changed from timerMinutes to initialSetMinutes
+                            if initialSetMinutes < 120 {
                                 initialSetMinutes += 1
-                                // No need to update initialSetMinutes = timerMinutes here.
                             }
                         } label: {
                             Image(systemName: "plus.circle.fill")
@@ -75,50 +75,14 @@ struct WorkView: View {
                     .padding(8)
                     .background(Color.red.opacity(0.3))
                     .cornerRadius(15)
+                    .opacity(isRunning ? 0.5 : 1.0) // Dim the picker when timer is running
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.vertical)
 
                 HStack {
                     Button("Start") {
-                        if !isRunning {
-                            isRunning = true
-                            timerMinutes = initialSetMinutes // Initialize timerMinutes from initialSetMinutes
-                            timerSeconds = 0 // Ensure seconds start from 0 for a fresh start
-                            #if !DEBUG
-                            if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
-                                PomodoroNotification.scheduleNotification(seconds: Double(timerMinutes * 60 + timerSeconds), title: "LightPomo", body: "Time for a break!")
-                            }
-                            #else
-                            if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
-                                PomodoroNotification.scheduleNotification(seconds: Double(timerMinutes * 60 + timerSeconds), title: "LightPomo", body: "Time for a break!")
-                            }
-                            #endif
-                            timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-                                if timerSeconds == 0 {
-                                    if timerMinutes == 0 {
-                                        timer?.invalidate()
-                                        timer = nil
-                                        isRunning = false
-                                        audio.play(.upSound)
-                                        // Timer finished, reset to initialSetMinutes
-                                        timerMinutes = initialSetMinutes
-                                        timerSeconds = 0
-                                    } else {
-                                        timerMinutes -= 1
-                                        timerSeconds = 59
-                                    }
-                                } else {
-                                    timerSeconds -= 1
-                                }
-                                if timerMinutes < 0 {
-                                    timerMinutes = 0
-                                }
-                                if timerSeconds < 0 {
-                                    timerSeconds = 0
-                                }
-                            }
-                        }
+                        startWorkTimer() // Call the new helper function
                     }
                     .disabled(isRunning)
                     .buttonStyle(.borderedProminent)
@@ -147,6 +111,56 @@ struct WorkView: View {
         .onDisappear {
             timer?.invalidate()
             timer = nil
+        }
+        // Present BreakView when showBreakView is true
+        .fullScreenCover(isPresented: $showBreakView) {
+            BreakView(onDismiss: {
+                // This closure will be called when BreakView is dismissed
+                startWorkTimer() // Automatically start the work timer again
+            })
+        }
+    }
+
+    // Helper function to encapsulate timer starting logic
+    private func startWorkTimer() {
+        if !isRunning { // Ensure timer isn't already running
+            isRunning = true
+            timerMinutes = initialSetMinutes // Initialize timerMinutes from initialSetMinutes
+            timerSeconds = 0 // Ensure seconds start from 0 for a fresh start
+
+            #if !DEBUG
+            if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+                PomodoroNotification.scheduleNotification(seconds: Double(timerMinutes * 60 + timerSeconds), title: "LightPomo", body: "Time for a break!")
+            }
+            #else
+            if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+                PomodoroNotification.scheduleNotification(seconds: Double(timerMinutes * 60 + timerSeconds), title: "LightPomo", body: "Time for a break!")
+            }
+            #endif
+
+            timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+                if timerSeconds == 0 {
+                    if timerMinutes == 0 {
+                        timer?.invalidate()
+                        timer = nil
+                        isRunning = false
+                        audio.play(.upSound)
+                        // Timer finished, show break view
+                        showBreakView = true
+                    } else {
+                        timerMinutes -= 1
+                        timerSeconds = 59
+                    }
+                } else {
+                    timerSeconds -= 1
+                }
+                if timerMinutes < 0 {
+                    timerMinutes = 0
+                }
+                if timerSeconds < 0 {
+                    timerSeconds = 0
+                }
+            }
         }
     }
 }
