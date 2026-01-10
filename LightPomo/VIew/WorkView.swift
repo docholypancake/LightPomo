@@ -13,6 +13,7 @@ struct WorkView: View {
     @State private var timerSeconds: Int = 0
     @State private var isRunning = false
     @State private var timer: Timer? = nil
+    @State private var endDate: Date? = nil // Store the target end time
     
     // State variable to store the initial minutes set by the user
     @State private var initialSetMinutes: Int = 25
@@ -94,6 +95,7 @@ struct WorkView: View {
                             timer?.invalidate()
                             timer = nil
                             isRunning = false
+                            endDate = nil
                             timerMinutes = initialSetMinutes // Reset to the stored initial value
                             timerSeconds = 0
                             let notificationCenter = UNUserNotificationCenter.current()
@@ -127,40 +129,96 @@ struct WorkView: View {
             isRunning = true
             timerMinutes = initialSetMinutes // Initialize timerMinutes from initialSetMinutes
             timerSeconds = 0 // Ensure seconds start from 0 for a fresh start
+            
+            // Set the end date based on current time plus duration
+            let totalSeconds = timerMinutes * 60 + timerSeconds
+            endDate = Date().addingTimeInterval(TimeInterval(totalSeconds))
 
             #if !DEBUG
             if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
-                PomodoroNotification.scheduleNotification(seconds: Double(timerMinutes * 60 + timerSeconds), title: "LightPomo", body: "Time for a break!")
+                scheduleNotificationsUpTo24Hours(totalSeconds: totalSeconds)
             }
             #else
             if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
-                PomodoroNotification.scheduleNotification(seconds: Double(timerMinutes * 60 + timerSeconds), title: "LightPomo", body: "Time for a break!")
+                scheduleNotificationsUpTo24Hours(totalSeconds: totalSeconds)
             }
             #endif
 
-            timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-                if timerSeconds == 0 {
-                    if timerMinutes == 0 {
-                        timer?.invalidate()
-                        timer = nil
-                        isRunning = false
-                        audio.play(.upSound)
-                        // Timer finished, show break view
-                        showBreakView = true
-                    } else {
-                        timerMinutes -= 1
-                        timerSeconds = 59
-                    }
-                } else {
-                    timerSeconds -= 1
+            timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
+                guard let targetDate = endDate else {
+                    timer?.invalidate()
+                    timer = nil
+                    isRunning = false
+                    return
                 }
-                if timerMinutes < 0 {
+                
+                let remaining = targetDate.timeIntervalSinceNow
+                
+                if remaining <= 0 {
+                    // Timer finished
+                    timer?.invalidate()
+                    timer = nil
+                    isRunning = false
+                    endDate = nil
                     timerMinutes = 0
-                }
-                if timerSeconds < 0 {
                     timerSeconds = 0
+                    audio.play(.upSound)
+                    showBreakView = true
+                } else {
+                    // Update display based on remaining time
+                    let minutes = Int(remaining) / 60
+                    let seconds = Int(remaining) % 60
+                    timerMinutes = minutes
+                    timerSeconds = seconds
                 }
             }
+        }
+    }
+    
+    // Schedule notifications for up to 24 hours
+    private func scheduleNotificationsUpTo24Hours(totalSeconds: Int) {
+        let notificationCenter = UNUserNotificationCenter.current()
+        
+        // Remove all previous notifications
+        notificationCenter.removeAllDeliveredNotifications()
+        notificationCenter.removeAllPendingNotificationRequests()
+        
+        // Schedule main timer completion notification
+        PomodoroNotification.scheduleNotification(
+            seconds: Double(totalSeconds),
+            title: "LightPomo",
+            body: "Time for a break!"
+        )
+        
+        // If timer is longer than 1 hour, schedule additional intermediate notifications
+        // up to 24 hours to keep the app active in the background
+        let maxNotificationTime = min(totalSeconds, 24 * 60 * 60) // Cap at 24 hours
+        var notificationTimes: [Double] = []
+        
+        // Schedule notifications at intervals to keep app alive
+        if totalSeconds > 3600 { // If more than 1 hour
+            var currentTime = 3600.0 // Start at 1 hour
+            while currentTime < Double(maxNotificationTime) {
+                notificationTimes.append(currentTime)
+                currentTime += 3600.0 // Every hour
+            }
+        }
+        
+        // Schedule the intermediate notifications
+        for (index, time) in notificationTimes.enumerated() {
+            let content = UNMutableNotificationContent()
+            content.title = "LightPomo"
+            content.body = "Timer still running..."
+            content.sound = nil // Silent notification
+            
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: time, repeats: false)
+            let request = UNNotificationRequest(
+                identifier: "intermediate-\(index)",
+                content: content,
+                trigger: trigger
+            )
+            
+            notificationCenter.add(request)
         }
     }
 }
