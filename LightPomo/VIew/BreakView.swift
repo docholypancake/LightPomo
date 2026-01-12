@@ -14,7 +14,6 @@ struct BreakView: View {
     @State private var timerMinutes: Int = 5 // 5 minutes for short break
     @State private var timerSeconds: Int = 0
     @State private var breakTimer: Timer? = nil // Renamed to avoid conflict with WorkView's timer
-    @State private var breakEndDate: Date? = nil // Store the target end time for break
 
     let audio = PomodoroAudio()
 
@@ -57,7 +56,6 @@ struct BreakView: View {
                     audio.play(.upSound)
                     breakTimer?.invalidate() // Stop the break timer
                     breakTimer = nil
-                    breakEndDate = nil
                     dismiss() // Dismiss the current view
                     onDismiss?() // Call the onDismiss closure
                 }
@@ -88,7 +86,6 @@ struct BreakView: View {
         .onDisappear {
             breakTimer?.invalidate() // Invalidate timer when view disappears
             breakTimer = nil
-            breakEndDate = nil
             // Reset animation states for next appearance if needed
             showIcon = false
             showTitle = false
@@ -98,36 +95,25 @@ struct BreakView: View {
     }
 
     private func startBreakTimer() {
-        // Set the end date based on current time plus duration
-        let totalSeconds = timerMinutes * 60 + timerSeconds
-        breakEndDate = Date().addingTimeInterval(TimeInterval(totalSeconds))
-        
-        breakTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-            guard let targetDate = breakEndDate else {
-                breakTimer?.invalidate()
-                breakTimer = nil
-                return
-            }
-            
-            let remaining = targetDate.timeIntervalSinceNow
-            
-            if remaining <= 0 {
-                // Timer finished
-                breakTimer?.invalidate()
-                breakTimer = nil
-                breakEndDate = nil
-                timerMinutes = 0
-                timerSeconds = 0
-                audio.play(.upSound)
-                dismiss()
-                onDismiss?()
+        breakTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+            if timerSeconds == 0 {
+                if timerMinutes == 0 {
+                    breakTimer?.invalidate()
+                    breakTimer = nil
+                    audio.play(.upSound)
+                    // Timer finished, automatically dismiss
+                    dismiss()
+                    onDismiss?()
+                } else {
+                    timerMinutes -= 1
+                    timerSeconds = 59
+                }
             } else {
-                // Update display based on remaining time
-                let minutes = Int(remaining) / 60
-                let seconds = Int(remaining) % 60
-                timerMinutes = minutes
-                timerSeconds = seconds
+                timerSeconds -= 1
             }
+            // Ensure timer cannot go negative (safety)
+            if timerMinutes < 0 { timerMinutes = 0 }
+            if timerSeconds < 0 { timerSeconds = 0 }
         }
     }
 }
