@@ -11,7 +11,7 @@ import SwiftUI
 struct LightPomoApp: App {
     var body: some Scene {
         WindowGroup {
-            TestView()
+            WorkView()
             
         }
     }

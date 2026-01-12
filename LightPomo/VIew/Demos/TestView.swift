@@ -24,10 +24,14 @@ struct TestView: View {
                 audioPlayer.play(.downSound)
             }
             
-            Button("send notification"){
+            Button("send notifications"){
                 PomodoroNotification.scheduleWorkNotification(seconds: 10, title: "work", body: "test")
                 
                 PomodoroNotification.scheduleBreakNotification(seconds: 15, title: "break", body: "test")
+            }
+            
+            Button("WorkView"){
+//                WorkView()
             }
             if showWarning{
                 VStack{
