@@ -18,7 +18,7 @@ class PomodoroNotification{
                 completion(true)
             case .notDetermined:
                 notificationCenter.requestAuthorization(options: [.alert, .badge, .sound]) { allowed, error in
-                    completion(true)
+                    completion(allowed)
                 }
             default:
                 completion(false)
