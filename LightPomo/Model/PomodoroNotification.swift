@@ -67,6 +67,10 @@ class PomodoroNotification{
         let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
         
         //adding request
-        notificationCenter.add(request)
+        notificationCenter.add(request) { error in
+            if let error = error {
+                print("Error adding notification \(identifier): \(error.localizedDescription)")
+            }
+        }
     }
 }

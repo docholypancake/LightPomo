@@ -177,38 +177,46 @@ struct WorkView: View {
     
     // Schedule notifications for up to 24 hours
     private func scheduleNotificationsUpTo24Hours(totalSeconds: Int) {
-        let notificationCenter = UNUserNotificationCenter.current()
-        
-        // Remove all previous notifications
-        notificationCenter.removeAllDeliveredNotifications()
-        notificationCenter.removeAllPendingNotificationRequests()
-        
-        // Schedule main timer completion notification
-        PomodoroNotification.addNotification(
-            seconds: Double(totalSeconds),
-            title: "LightPomo",
-            body: "Time for a break!",
-            identifier: "timer-complete"
-        )
-        
-        // Schedule break notifications every (worktime + 5) minutes up to 24 hours
-        let workTimeInSeconds = totalSeconds
-        let notificationIntervalSeconds = workTimeInSeconds + (5 * 60) // worktime + 5 minutes
-        let maxNotificationTime = 24 * 60 * 60 // 24 hours (iOS notification limit)
-        
-        var currentNotificationTime = notificationIntervalSeconds
-        var notificationIndex = 0
-        
-        while currentNotificationTime <= maxNotificationTime {
+        // Check and request notification authorization first
+        PomodoroNotification.checkAuth { authorized in
+            guard authorized else {
+                print("Notification permission not granted")
+                return
+            }
+            
+            let notificationCenter = UNUserNotificationCenter.current()
+            
+            // Remove all previous notifications
+            notificationCenter.removeAllDeliveredNotifications()
+            notificationCenter.removeAllPendingNotificationRequests()
+            
+            // Schedule main timer completion notification
             PomodoroNotification.addNotification(
-                seconds: Double(currentNotificationTime),
+                seconds: Double(totalSeconds),
                 title: "LightPomo",
                 body: "Time for a break!",
-                identifier: "break-\(notificationIndex)"
+                identifier: "timer-complete"
             )
             
-            currentNotificationTime += notificationIntervalSeconds
-            notificationIndex += 1
+            // Schedule break notifications every (worktime + 5) minutes up to 24 hours
+            let workTimeInSeconds = totalSeconds
+            let notificationIntervalSeconds = workTimeInSeconds + (5 * 60) // worktime + 5 minutes
+            let maxNotificationTime = 24 * 60 * 60 // 24 hours (iOS notification limit)
+            
+            var currentNotificationTime = notificationIntervalSeconds
+            var notificationIndex = 0
+            
+            while currentNotificationTime <= maxNotificationTime {
+                PomodoroNotification.addNotification(
+                    seconds: Double(currentNotificationTime),
+                    title: "LightPomo",
+                    body: "Time for a break!",
+                    identifier: "break-\(notificationIndex)"
+                )
+                
+                currentNotificationTime += notificationIntervalSeconds
+                notificationIndex += 1
+            }
         }
     }
 }
