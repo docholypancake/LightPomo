@@ -152,11 +152,11 @@ struct WorkView: View {
 
             #if !DEBUG
             if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
-                PomodoroNotification.scheduleNotification(seconds: Double(timerMinutes * 60 + timerSeconds), title: "LightPomo", body: "Time for a break!")
+                PomodoroNotification.scheduleBreakNotification(seconds: Double(timerMinutes * 60 + timerSeconds), title: "LightPomo", body: "Time for a break!")
             }
             #else
             if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
-                PomodoroNotification.scheduleNotification(seconds: Double(timerMinutes * 60 + timerSeconds), title: "LightPomo", body: "Time for a break!")
+                PomodoroNotification.scheduleBreakNotification(seconds: Double(timerMinutes * 60 + timerSeconds), title: "LightPomo", body: "Time for a break!")
             }
             #endif
 
