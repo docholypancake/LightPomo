@@ -177,48 +177,46 @@ struct WorkView: View {
     
     // Schedule notifications for up to 24 hours
     private func scheduleNotificationsUpTo24Hours(totalSeconds: Int) {
-        let notificationCenter = UNUserNotificationCenter.current()
-        
-        // Remove all previous notifications
-        notificationCenter.removeAllDeliveredNotifications()
-        notificationCenter.removeAllPendingNotificationRequests()
-        
-        // Schedule main timer completion notification
-        PomodoroNotification.scheduleNotification(
-            seconds: Double(totalSeconds),
-            title: "LightPomo",
-            body: "Time for a break!"
-        )
-        
-        // If timer is longer than 1 hour, schedule additional intermediate notifications
-        // up to 24 hours (iOS limit) for better user awareness
-        let maxNotificationTime = min(totalSeconds, 24 * 60 * 60) // Cap at 24 hours
-        var notificationTimes: [Double] = []
-        
-        // Schedule notifications at intervals for user awareness of long running timers
-        if totalSeconds > 3600 { // If more than 1 hour
-            var currentTime = 3600.0 // Start at 1 hour
-            while currentTime < Double(maxNotificationTime) {
-                notificationTimes.append(currentTime)
-                currentTime += 3600.0 // Every hour
+        // Check and request notification authorization first
+        PomodoroNotification.checkAuth { authorized in
+            guard authorized else {
+                print("Notification permission not granted")
+                return
             }
-        }
-        
-        // Schedule the intermediate notifications
-        for (index, time) in notificationTimes.enumerated() {
-            let content = UNMutableNotificationContent()
-            content.title = "LightPomo"
-            content.body = "Timer still running..."
-            content.sound = nil // Silent notification
             
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: time, repeats: false)
-            let request = UNNotificationRequest(
-                identifier: "intermediate-\(index)",
-                content: content,
-                trigger: trigger
+            let notificationCenter = UNUserNotificationCenter.current()
+            
+            // Remove all previous notifications
+            notificationCenter.removeAllDeliveredNotifications()
+            notificationCenter.removeAllPendingNotificationRequests()
+            
+            // Schedule main timer completion notification
+            PomodoroNotification.addNotification(
+                seconds: Double(totalSeconds),
+                title: "LightPomo",
+                body: "Time for a break!",
+                identifier: "timer-complete"
             )
             
-            notificationCenter.add(request)
+            // Schedule break notifications every (worktime + 5) minutes up to 24 hours
+            let workTimeInSeconds = totalSeconds
+            let notificationIntervalSeconds = workTimeInSeconds + (5 * 60) // worktime + 5 minutes
+            let maxNotificationTime = 24 * 60 * 60 // 24 hours (iOS notification limit)
+            
+            var currentNotificationTime = notificationIntervalSeconds
+            var notificationIndex = 0
+            
+            while currentNotificationTime <= maxNotificationTime {
+                PomodoroNotification.addNotification(
+                    seconds: Double(currentNotificationTime),
+                    title: "LightPomo",
+                    body: "Time for a break!",
+                    identifier: "break-\(notificationIndex)"
+                )
+                
+                currentNotificationTime += notificationIntervalSeconds
+                notificationIndex += 1
+            }
         }
     }
 }
