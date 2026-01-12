@@ -50,4 +50,24 @@ class PomodoroNotification{
         notificationCenter.add(request)
         
     }
+    
+    // Schedule a notification without clearing existing ones
+    static func addNotification(seconds: TimeInterval, title: String, body: String, identifier: String){
+        let notificationCenter = UNUserNotificationCenter.current()
+        
+        //content
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = UNNotificationSound(named: UNNotificationSoundName(PomodoroAudioSounds.upSound.resource))
+        
+        //trigger
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: seconds, repeats: false)
+        
+        //request
+        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+        
+        //adding request
+        notificationCenter.add(request)
+    }
 }

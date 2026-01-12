@@ -140,9 +140,21 @@ struct BreakView: View {
         // This will schedule "back to work" notifications in a loop
         // Similar to break notifications: every (breaktime + 5) minutes up to 24 hours
         /*
-         
         let notificationCenter = UNUserNotificationCenter.current()
         
+        // Remove all previous notifications
+        notificationCenter.removeAllDeliveredNotifications()
+        notificationCenter.removeAllPendingNotificationRequests()
+        
+        // Schedule main break completion notification
+        PomodoroNotification.addNotification(
+            seconds: Double(totalSeconds),
+            title: "LightPomo",
+            body: "Time to get back to work!",
+            identifier: "break-complete"
+        )
+        
+        // Schedule back to work notifications every (breaktime + 5) minutes up to 24 hours
         let breakTimeInSeconds = totalSeconds
         let notificationIntervalSeconds = breakTimeInSeconds + (5 * 60) // breaktime + 5 minutes
         let maxNotificationTime = 24 * 60 * 60 // 24 hours (iOS notification limit)
@@ -151,26 +163,18 @@ struct BreakView: View {
         var notificationIndex = 0
         
         while currentNotificationTime <= maxNotificationTime {
-            let content = UNMutableNotificationContent()
-            content.title = "LightPomo"
-            content.body = "Time to get back to work!"
-            content.sound = UNNotificationSound(named: UNNotificationSoundName(PomodoroAudioSounds.downSound.resource)) //trying to use downsound
-            
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: Double(currentNotificationTime), repeats: false)
-            let request = UNNotificationRequest(
-                identifier: "back-to-work-\(notificationIndex)",
-                content: content,
-                trigger: trigger
+            PomodoroNotification.addNotification(
+                seconds: Double(currentNotificationTime),
+                title: "LightPomo",
+                body: "Time to get back to work!",
+                identifier: "back-to-work-\(notificationIndex)"
             )
-            
-            notificationCenter.add(request)
             
             currentNotificationTime += notificationIntervalSeconds
             notificationIndex += 1
         }
-         */
+        */
     }
-         
 }
 
 #Preview {

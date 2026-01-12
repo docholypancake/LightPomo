@@ -184,14 +184,12 @@ struct WorkView: View {
         notificationCenter.removeAllPendingNotificationRequests()
         
         // Schedule main timer completion notification
-        let mainContent = UNMutableNotificationContent()
-        mainContent.title = "LightPomo"
-        mainContent.body = "Time for a break!"
-        mainContent.sound = UNNotificationSound(named: UNNotificationSoundName(PomodoroAudioSounds.upSound.resource))
-        
-        let mainTrigger = UNTimeIntervalNotificationTrigger(timeInterval: Double(totalSeconds), repeats: false)
-        let mainRequest = UNNotificationRequest(identifier: "timer-complete", content: mainContent, trigger: mainTrigger)
-        notificationCenter.add(mainRequest)
+        PomodoroNotification.addNotification(
+            seconds: Double(totalSeconds),
+            title: "LightPomo",
+            body: "Time for a break!",
+            identifier: "timer-complete"
+        )
         
         // Schedule break notifications every (worktime + 5) minutes up to 24 hours
         let workTimeInSeconds = totalSeconds
@@ -202,19 +200,12 @@ struct WorkView: View {
         var notificationIndex = 0
         
         while currentNotificationTime <= maxNotificationTime {
-            let content = UNMutableNotificationContent()
-            content.title = "LightPomo"
-            content.body = "Time for a break!"
-            content.sound = UNNotificationSound(named: UNNotificationSoundName(PomodoroAudioSounds.upSound.resource))
-            
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: Double(currentNotificationTime), repeats: false)
-            let request = UNNotificationRequest(
-                identifier: "break-\(notificationIndex)",
-                content: content,
-                trigger: trigger
+            PomodoroNotification.addNotification(
+                seconds: Double(currentNotificationTime),
+                title: "LightPomo",
+                body: "Time for a break!",
+                identifier: "break-\(notificationIndex)"
             )
-            
-            notificationCenter.add(request)
             
             currentNotificationTime += notificationIntervalSeconds
             notificationIndex += 1
