@@ -28,7 +28,7 @@ struct BreakView: View {
             Color.green.ignoresSafeArea() // Background changed to green
 
             VStack {
-                Image(systemName: "cup.and.saucer.fill") 
+                Image(systemName: "cup.and.saucer.fill")
                     .imageScale(.large)
                     .font(.system(size: 80)) // Larger icon
                     .foregroundStyle(.white)
