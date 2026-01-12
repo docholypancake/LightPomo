@@ -31,7 +31,8 @@ class PomodoroNotification{
         
         //previous notification handling
         notificationCenter.removeAllDeliveredNotifications()
-        notificationCenter.removeAllPendingNotificationRequests()
+//        notificationCenter.removeAllPendingNotificationRequests()
+        //removed the line to test if scheduling ahead of time will work
         
         //content
         let content = UNMutableNotificationContent()

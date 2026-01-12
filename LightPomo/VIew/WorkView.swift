@@ -7,12 +7,18 @@
 
 import SwiftUI
 import UserNotifications
+let notificationCenter = UNUserNotificationCenter.current()
 
 struct WorkView: View {
     @State private var timerMinutes: Int = 25
     @State private var timerSeconds: Int = 0
     @State private var isRunning = false
     @State private var timer: Timer? = nil
+    @State private var showWarning = false
+    
+    // Here for the notification auth
+    @Environment(\.scenePhase) var scenePhase
+    
     
     // State variable to store the initial minutes set by the user
     @State private var initialSetMinutes: Int = 25
@@ -105,8 +111,24 @@ struct WorkView: View {
                         .padding()
                     }
                 }
+                if showWarning{
+                    VStack{
+                        Text ("Notifications are disabled")
+                            .foregroundColor(.red)
+                        Button("Enable"){
+                            //settings
+                        }
+                    }
+                }
             }
             .padding(.horizontal) // Apply horizontal padding to the content within the ZStack
+            .onChange(of: scenePhase){
+                    if scenePhase == .active{
+                        PomodoroNotification.checkAuth { authorized in
+                             showWarning = !authorized
+                        }
+                    }
+            }
         }
         .onDisappear {
             timer?.invalidate()

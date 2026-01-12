@@ -25,7 +25,8 @@ struct TestView: View {
             }
             
             Button("send notification"){
-                PomodoroNotification.scheduleNotification(seconds: 5, title: "Test", body: "hi")
+                PomodoroNotification.scheduleNotification(seconds: 5, title: "work", body: "test")
+                PomodoroNotification.scheduleNotification(seconds: 10, title: "break", body: "test")
             }
             if showWarning{
                 VStack{
