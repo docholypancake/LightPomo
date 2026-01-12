@@ -102,6 +102,9 @@ struct BreakView: View {
         let totalSeconds = timerMinutes * 60 + timerSeconds
         breakEndDate = Date().addingTimeInterval(TimeInterval(totalSeconds))
         
+        // TODO: Schedule "back to work" notifications
+        // scheduleBackToWorkNotifications(totalSeconds: totalSeconds)
+        
         breakTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
             guard let targetDate = breakEndDate else {
                 breakTimer?.invalidate()
@@ -129,6 +132,43 @@ struct BreakView: View {
                 timerSeconds = seconds
             }
         }
+    }
+    
+    // Placeholder for "back to work" notification scheduling
+    // TODO: Implement this method later
+    private func scheduleBackToWorkNotifications(totalSeconds: Int) {
+        // This will schedule "back to work" notifications in a loop
+        // Similar to break notifications: every (breaktime + 5) minutes up to 24 hours
+        /*
+        let notificationCenter = UNUserNotificationCenter.current()
+        
+        let breakTimeInSeconds = totalSeconds
+        let notificationIntervalSeconds = breakTimeInSeconds + (5 * 60) // breaktime + 5 minutes
+        let maxNotificationTime = 24 * 60 * 60 // 24 hours (iOS notification limit)
+        
+        var currentNotificationTime = notificationIntervalSeconds
+        var notificationIndex = 0
+        
+        while currentNotificationTime <= maxNotificationTime {
+            let content = UNMutableNotificationContent()
+            content.title = "LightPomo"
+            content.body = "Time to get back to work!"
+            content.sound = .default
+            content.sound = UNNotificationSound(named: UNNotificationSoundName(PomodoroAudioSounds.upSound.resource))
+            
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: Double(currentNotificationTime), repeats: false)
+            let request = UNNotificationRequest(
+                identifier: "back-to-work-\(notificationIndex)",
+                content: content,
+                trigger: trigger
+            )
+            
+            notificationCenter.add(request)
+            
+            currentNotificationTime += notificationIntervalSeconds
+            notificationIndex += 1
+        }
+        */
     }
 }
 

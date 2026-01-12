@@ -190,35 +190,32 @@ struct WorkView: View {
             body: "Time for a break!"
         )
         
-        // If timer is longer than 1 hour, schedule additional intermediate notifications
-        // up to 24 hours (iOS limit) for better user awareness
-        let maxNotificationTime = min(totalSeconds, 24 * 60 * 60) // Cap at 24 hours
-        var notificationTimes: [Double] = []
+        // Schedule break notifications every (worktime + 5) minutes up to 24 hours
+        let workTimeInSeconds = totalSeconds
+        let notificationIntervalSeconds = workTimeInSeconds + (5 * 60) // worktime + 5 minutes
+        let maxNotificationTime = 24 * 60 * 60 // 24 hours (iOS notification limit)
         
-        // Schedule notifications at intervals for user awareness of long running timers
-        if totalSeconds > 3600 { // If more than 1 hour
-            var currentTime = 3600.0 // Start at 1 hour
-            while currentTime < Double(maxNotificationTime) {
-                notificationTimes.append(currentTime)
-                currentTime += 3600.0 // Every hour
-            }
-        }
+        var currentNotificationTime = notificationIntervalSeconds
+        var notificationIndex = 0
         
-        // Schedule the intermediate notifications
-        for (index, time) in notificationTimes.enumerated() {
+        while currentNotificationTime <= maxNotificationTime {
             let content = UNMutableNotificationContent()
             content.title = "LightPomo"
-            content.body = "Timer still running..."
-            content.sound = nil // Silent notification
+            content.body = "Time for a break!"
+            content.sound = .default
+            content.sound = UNNotificationSound(named: UNNotificationSoundName(PomodoroAudioSounds.upSound.resource))
             
-            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: time, repeats: false)
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: Double(currentNotificationTime), repeats: false)
             let request = UNNotificationRequest(
-                identifier: "intermediate-\(index)",
+                identifier: "break-\(notificationIndex)",
                 content: content,
                 trigger: trigger
             )
             
             notificationCenter.add(request)
+            
+            currentNotificationTime += notificationIntervalSeconds
+            notificationIndex += 1
         }
     }
 }
