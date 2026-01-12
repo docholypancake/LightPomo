@@ -140,6 +140,7 @@ struct BreakView: View {
         // This will schedule "back to work" notifications in a loop
         // Similar to break notifications: every (breaktime + 5) minutes up to 24 hours
         /*
+         */
         let notificationCenter = UNUserNotificationCenter.current()
         
         let breakTimeInSeconds = totalSeconds
@@ -153,7 +154,7 @@ struct BreakView: View {
             let content = UNMutableNotificationContent()
             content.title = "LightPomo"
             content.body = "Time to get back to work!"
-            content.sound = UNNotificationSound(named: UNNotificationSoundName(PomodoroAudioSounds.upSound.resource))
+            content.sound = UNNotificationSound(named: UNNotificationSoundName(PomodoroAudioSounds.downSound.resource)) //trying to use downsound
             
             let trigger = UNTimeIntervalNotificationTrigger(timeInterval: Double(currentNotificationTime), repeats: false)
             let request = UNNotificationRequest(
@@ -167,7 +168,7 @@ struct BreakView: View {
             currentNotificationTime += notificationIntervalSeconds
             notificationIndex += 1
         }
-        */
+        
     }
 }
 
