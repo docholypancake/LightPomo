@@ -13,6 +13,10 @@ import UIKit // Required for UIApplication.openSettingsURLString
 let notificationCenter = UNUserNotificationCenter.current()
 let workEndTimeKey = "WorkTimerEndTime"
 
+// UserDefault keys for persisting picker selections
+let initialSetMinutesKey = "InitialSetMinutes"
+let initialSetBreakMinutesKey = "InitialSetBreakMinutes"
+
 struct WorkView: View {
     @State private var timerMinutes: Int = 25
     @State private var timerSeconds: Int = 0
@@ -24,9 +28,21 @@ struct WorkView: View {
     @Environment(\.scenePhase) var scenePhase
     
     // State variable to store the initial minutes set by the user for work
-    @State private var initialSetMinutes: Int = 25
+    @State private var initialSetMinutes: Int = UserDefaults.standard.integer(forKey: initialSetMinutesKey) {
+        didSet {
+            // Save to UserDefaults whenever it changes
+            UserDefaults.standard.set(initialSetMinutes, forKey: initialSetMinutesKey)
+            // If the timer is not running, update the displayed minutes immediately
+            if !isRunning { timerMinutes = initialSetMinutes }
+        }
+    }
     // New state variable for break duration, configurable by the user
-    @State private var initialSetBreakMinutes: Int = 5 // Default 5 minutes break
+    @State private var initialSetBreakMinutes: Int = UserDefaults.standard.integer(forKey: initialSetBreakMinutesKey) {
+        didSet {
+            // Save to UserDefaults whenever it changes
+            UserDefaults.standard.set(initialSetBreakMinutes, forKey: initialSetBreakMinutesKey)
+        }
+    }
 
     // State variable to control the presentation of BreakView
     @State private var showBreakView = false
@@ -175,6 +191,13 @@ struct WorkView: View {
             }
             .padding(.horizontal) // Apply horizontal padding to the content within the ZStack
             .onAppear {
+                // Initialize default values if not already set (e.g., first launch)
+                if UserDefaults.standard.object(forKey: initialSetMinutesKey) == nil {
+                    initialSetMinutes = 25
+                }
+                if UserDefaults.standard.object(forKey: initialSetBreakMinutesKey) == nil {
+                    initialSetBreakMinutes = 5
+                }
                 restoreTimerState() // Restore timer state when the view appears
             }
             // Observe scenePhase changes to handle app moving to/from background
@@ -322,7 +345,8 @@ struct WorkView: View {
         timer?.invalidate() // Stop the internal timer
         timer = nil
         isRunning = false
-        timerMinutes = initialSetMinutes // Reset display to initial work minutes
+        // When resetting, use the persisted initialSetMinutes, not the default hardcoded value
+        timerMinutes = initialSetMinutes 
         timerSeconds = 0
         UserDefaults.standard.removeObject(forKey: workEndTimeKey) // Clear saved end time
     }
