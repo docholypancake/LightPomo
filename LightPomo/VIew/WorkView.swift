@@ -184,18 +184,19 @@ struct WorkView: View {
         notificationCenter.removeAllPendingNotificationRequests()
         
         // Schedule main timer completion notification
-        PomodoroNotification.scheduleNotification(
-            seconds: Double(totalSeconds),
-            title: "LightPomo",
-            body: "Time for a break!"
-        )
+        let mainContent = UNMutableNotificationContent()
+        mainContent.title = "LightPomo"
+        mainContent.body = "Time for a break!"
+        mainContent.sound = UNNotificationSound(named: UNNotificationSoundName(PomodoroAudioSounds.upSound.resource))
         
-
+        let mainTrigger = UNTimeIntervalNotificationTrigger(timeInterval: Double(totalSeconds), repeats: false)
+        let mainRequest = UNNotificationRequest(identifier: "timer-complete", content: mainContent, trigger: mainTrigger)
+        notificationCenter.add(mainRequest)
+        
         // Schedule break notifications every (worktime + 5) minutes up to 24 hours
         let workTimeInSeconds = totalSeconds
         let notificationIntervalSeconds = workTimeInSeconds + (5 * 60) // worktime + 5 minutes
         let maxNotificationTime = 24 * 60 * 60 // 24 hours (iOS notification limit)
-
         
         var currentNotificationTime = notificationIntervalSeconds
         var notificationIndex = 0
