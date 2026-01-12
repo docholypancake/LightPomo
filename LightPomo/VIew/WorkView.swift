@@ -190,10 +190,12 @@ struct WorkView: View {
             body: "Time for a break!"
         )
         
+
         // Schedule break notifications every (worktime + 5) minutes up to 24 hours
         let workTimeInSeconds = totalSeconds
         let notificationIntervalSeconds = workTimeInSeconds + (5 * 60) // worktime + 5 minutes
         let maxNotificationTime = 24 * 60 * 60 // 24 hours (iOS notification limit)
+
         
         var currentNotificationTime = notificationIntervalSeconds
         var notificationIndex = 0
