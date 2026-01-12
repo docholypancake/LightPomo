@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UserNotifications
 
 struct BreakView: View {
     @Environment(\.dismiss) var dismiss // Use @Environment to dismiss the view
@@ -95,6 +96,24 @@ struct BreakView: View {
     }
 
     private func startBreakTimer() {
+#if !DEBUG
+        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+            PomodoroNotification.scheduleWorkNotification(
+                seconds: Double(timerMinutes * 60 + timerSeconds),
+                title: "LightPomo",
+                body: "Break is over, get back to work!"
+            )
+        }
+#else
+        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+            PomodoroNotification.scheduleWorkNotification(
+                seconds: Double(timerMinutes * 60 + timerSeconds),
+                title: "LightPomo",
+                body: "Break is over, get back to work!"
+            )
+        }
+#endif
+
         breakTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
             if timerSeconds == 0 {
                 if timerMinutes == 0 {

@@ -8,6 +8,7 @@
 import SwiftUI
 import UserNotifications
 let notificationCenter = UNUserNotificationCenter.current()
+let workEndTimeKey = "WorkTimerEndTime"
 
 struct WorkView: View {
     @State private var timerMinutes: Int = 25
@@ -102,6 +103,7 @@ struct WorkView: View {
                             isRunning = false
                             timerMinutes = initialSetMinutes // Reset to the stored initial value
                             timerSeconds = 0
+                            UserDefaults.standard.removeObject(forKey: workEndTimeKey)
                             let notificationCenter = UNUserNotificationCenter.current()
                             notificationCenter.removeAllDeliveredNotifications()
                             notificationCenter.removeAllPendingNotificationRequests()
@@ -122,11 +124,15 @@ struct WorkView: View {
                 }
             }
             .padding(.horizontal) // Apply horizontal padding to the content within the ZStack
+            .onAppear {
+                restoreTimerState()
+            }
             .onChange(of: scenePhase){
                     if scenePhase == .active{
                         PomodoroNotification.checkAuth { authorized in
                              showWarning = !authorized
                         }
+                        restoreTimerState()
                     }
             }
         }
@@ -149,6 +155,9 @@ struct WorkView: View {
             isRunning = true
             timerMinutes = initialSetMinutes // Initialize timerMinutes from initialSetMinutes
             timerSeconds = 0 // Ensure seconds start from 0 for a fresh start
+            
+            let endTime = Date().addingTimeInterval(TimeInterval(timerMinutes * 60 + timerSeconds))
+            UserDefaults.standard.set(endTime, forKey: workEndTimeKey)
 
             #if !DEBUG
             if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
@@ -161,28 +170,86 @@ struct WorkView: View {
             #endif
 
             timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-                if timerSeconds == 0 {
-                    if timerMinutes == 0 {
-                        timer?.invalidate()
-                        timer = nil
-                        isRunning = false
-                        audio.play(.upSound)
-                        // Timer finished, show break view
-                        showBreakView = true
-                    } else {
-                        timerMinutes -= 1
-                        timerSeconds = 59
-                    }
-                } else {
-                    timerSeconds -= 1
-                }
-                if timerMinutes < 0 {
-                    timerMinutes = 0
-                }
-                if timerSeconds < 0 {
+                guard let savedEndTime = UserDefaults.standard.object(forKey: workEndTimeKey) as? Date else {
+                    // No end time saved, stop timer
+                    timer?.invalidate()
+                    timer = nil
+                    isRunning = false
+                    timerMinutes = initialSetMinutes
                     timerSeconds = 0
+                    return
+                }
+                
+                let remaining = Int(savedEndTime.timeIntervalSinceNow)
+                if remaining <= 0 {
+                    timer?.invalidate()
+                    timer = nil
+                    isRunning = false
+                    timerMinutes = 0
+                    timerSeconds = 0
+                    UserDefaults.standard.removeObject(forKey: workEndTimeKey)
+                    audio.play(.upSound)
+                    // Timer finished, show break view
+                    showBreakView = true
+                } else {
+                    timerMinutes = remaining / 60
+                    timerSeconds = remaining % 60
                 }
             }
+        }
+    }
+    
+    private func restoreTimerState() {
+        if let savedEndTime = UserDefaults.standard.object(forKey: workEndTimeKey) as? Date {
+            let remaining = Int(savedEndTime.timeIntervalSinceNow)
+            if remaining > 0 {
+                timerMinutes = remaining / 60
+                timerSeconds = remaining % 60
+                isRunning = true
+                if timer == nil {
+                    timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+                        guard let savedEndTime = UserDefaults.standard.object(forKey: workEndTimeKey) as? Date else {
+                            timer?.invalidate()
+                            timer = nil
+                            isRunning = false
+                            timerMinutes = initialSetMinutes
+                            timerSeconds = 0
+                            return
+                        }
+                        let remaining = Int(savedEndTime.timeIntervalSinceNow)
+                        if remaining <= 0 {
+                            timer?.invalidate()
+                            timer = nil
+                            isRunning = false
+                            timerMinutes = 0
+                            timerSeconds = 0
+                            UserDefaults.standard.removeObject(forKey: workEndTimeKey)
+                            audio.play(.upSound)
+                            showBreakView = true
+                        } else {
+                            timerMinutes = remaining / 60
+                            timerSeconds = remaining % 60
+                        }
+                    }
+                }
+            } else {
+                // Timer expired while app was inactive
+                timer?.invalidate()
+                timer = nil
+                isRunning = false
+                timerMinutes = 0
+                timerSeconds = 0
+                UserDefaults.standard.removeObject(forKey: workEndTimeKey)
+                audio.play(.upSound)
+                showBreakView = true
+            }
+        } else {
+            // No saved timer, reset states
+            timer?.invalidate()
+            timer = nil
+            isRunning = false
+            timerMinutes = initialSetMinutes
+            timerSeconds = 0
         }
     }
 }
