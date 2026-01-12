@@ -202,7 +202,6 @@ struct WorkView: View {
             let content = UNMutableNotificationContent()
             content.title = "LightPomo"
             content.body = "Time for a break!"
-            content.sound = .default
             content.sound = UNNotificationSound(named: UNNotificationSoundName(PomodoroAudioSounds.upSound.resource))
             
             let trigger = UNTimeIntervalNotificationTrigger(timeInterval: Double(currentNotificationTime), repeats: false)
